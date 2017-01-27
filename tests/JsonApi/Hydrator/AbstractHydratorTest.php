@@ -128,7 +128,32 @@ class AbstractHydratorTest extends TestCase
 
         $hydrator = $this->createHydrator("elephant", $attributeHydrator);
         $domainObject = $hydrator->hydrateForUpdate($this->createRequest($body), new DefaultExceptionFactory(), []);
-        $this->assertEquals([], $domainObject);
+        $this->assertEquals(['weight' => null], $domainObject);
+    }
+
+    public function hydrateArributesWhenAttributeIsMissing()
+    {
+        $body = [
+            "data" => [
+                "type" => "elephant",
+                "id" => "1",
+                "attributes" => [
+                    "height" => 2.5
+                ]
+            ]
+        ];
+        $missingAttribute = null;
+        $attributeHydrator = [
+            "weight" => function (array &$elephant, $value, $data, $attribute, $isMissing) use (&$missingAttribute) {
+                $missingAttribute = $isMissing;
+                $elephant['weight'] = $value;
+            }
+        ];
+
+        $hydrator = $this->createHydrator("elephant", $attributeHydrator);
+        $domainObject = $hydrator->hydrateForUpdate($this->createRequest($body), new DefaultExceptionFactory(), []);
+        $this->assertEquals(['weight' => null], $domainObject);
+        $this->assertTrue($missingAttribute);
     }
 
     /**
